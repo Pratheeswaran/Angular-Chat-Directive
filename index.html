@@ -1,0 +1,677 @@
+<!doctype html>
+<html>
+<head>
+    <title>Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f0f1f2;
+            font: 12px "Open Sans", sans-serif;
+        }
+        .dark-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 5;
+            -webkit-transition: all 600ms cubic-bezier(0.200, 0.965, 0.000, 1.005);
+            transition: all 600ms cubic-bezier(0.200, 0.965, 0.000, 1.005);
+        }
+
+        .show {
+            opacity: 1;
+            transition: 600ms;
+            display: block !important;
+        }
+
+        .fab {
+            z-index: 9999;
+            cursor: pointer;
+            border-radius: 50%;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            color: #fff;
+            height: 56px;
+            width: 56px;
+            box-shadow: 0 5px 5px rgba(126, 111, 111, 0.39);
+            -webkit-transition: all 600ms cubic-bezier(0.200, 0.965, 0.000, 1.005);
+            transition: all 600ms cubic-bezier(0.200, 0.965, 0.000, 1.005);
+        }
+
+        #User {
+            box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            image-rendering: crisp-edges;
+            image-rendering: -moz-crisp-edges; /* Firefox */
+            image-rendering: -o-crisp-edges; /* Opera */
+            border: 5px solid rgb(23, 74, 62);
+            transition: all 600ms cubic-bezier(0.200, 0.965, 0.000, 1.005);
+            border-radius: 50%;
+            width: 100%;
+            position: absolute;
+            z-index: 1000;
+        }
+
+        .fab.active {
+            cursor: default;
+            background: transparent;
+            border-radius: 10px;
+            width: 290px;
+            height: 484px;
+            box-shadow: 0 25px 35px 0 rgba(0, 0, 0, 0.35);
+            bottom: 30px;
+            right: 30px;
+        }
+
+        #chatview {
+            width: 290px;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            display: none;
+            background: #fff;
+        }
+
+        .profile_small {
+            height: 60px !important;
+        }
+
+        #profile {
+            height: 180px;
+            overflow: hidden;
+            text-align: center;
+            color: #fff;
+            -webkit-transition: all 600ms ease-out;
+            -moz-transition: all 600ms ease-out;
+            -ms-transition: all 600ms ease-out;
+            -o-transition: all 600ms ease-out;
+            transition: all 600ms ease-out;
+        }
+
+        .p1 #profile {
+            background: url(https://s-media-cache-ak0.pinimg.com/736x/d3/18/e3/d318e37a77f3ddad4ccb92fafdef0019.jpg);
+            background-size: cover;
+            background-position: 0;
+        }
+
+        #profile p {
+            font-weight: 600;
+            font-size: 24px;
+            margin: 118px 0 -1px;
+            opacity: 0;
+            -webkit-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            -moz-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            -ms-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            -o-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+        }
+
+            #profile p.animate {
+                margin-top: 100px;
+                opacity: 1;
+                -webkit-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+                -moz-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+                -ms-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+                -o-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+                transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            }
+
+        #profile span {
+            font-weight: 400;
+            font-size: 12px;
+        }
+
+        #chat-messages::-webkit-scrollbar {
+            display: none;
+        }
+
+        #chat-messages {
+            opacity: 0;
+            margin-top: 30px;
+            width: 290px;
+            height: calc(100% - 118px);
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            -moz-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            -ms-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            -o-transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+            transition: all 200ms cubic-bezier(0.000, 0.995, 0.990, 1.000);
+        }
+
+            #chat-messages.animate {
+                opacity: 1;
+                margin-top: 0;
+            }
+
+            #chat-messages div.message label {
+                color: #607D8B;
+                font-weight: 600;
+                font-size: 12px;
+                text-align: center;
+                margin: 15px 0;
+                width: 100%;
+                display: block;
+            }
+
+            #chat-messages div.message {
+                padding: 10px 10px;
+                clear: both;
+                margin-bottom: 45px;
+            }
+
+            #chat-messages .message img {
+                float: left;
+                border-radius: 50%;
+                width: 30px;
+                margin: 5px;
+            }
+
+            #chat-messages div.message.right img {
+                float: right;
+            }
+
+        .message .bubble {
+                max-width: 80%;
+         overflow-wrap: break-word;
+            min-width: 50px;
+            background: rgba(96, 125, 139, 0.82);
+            font-size: 13px;
+            font-weight: 600;
+            padding: 12px 13px;
+            border-radius: 5px 5px 5px 0px;
+            color: #ffffff;
+            position: relative;
+            float: left;
+        }
+
+        #chat-messages div.message.right .bubble {
+            float: right;
+            border-radius: 5px 5px 0px 5px;
+        }
+
+        .bubble span {
+            color: #aab8c2;
+            font-size: 11px;
+            position: absolute;
+            right: 0;
+            bottom: -22px;
+        }
+
+        .small {
+            height: 60px !important;
+        }
+
+        #sendmessage {
+            height: 60px;
+            border-top: 1px solid #e7ebee;
+            position: absolute;
+            bottom: 0;
+            right: 0px;
+            width: 290px;
+            background: #fff;
+            padding-bottom: 50px;
+        }
+
+            #sendmessage :first-child{
+                width: calc(100% - 70px);
+                background: #fff;
+                margin: 21px 0px 0px 10px;
+                border: none;
+                padding: 0;
+                font-size: 14px;
+                font-family: "Open Sans", sans-serif;
+                font-weight: 500;
+                    height: initial;
+                    overflow:hidden;
+                color: #515151;
+                    resize: none;
+            }
+
+                #sendmessage :first-child:focus {
+                    outline: 0;
+                }
+
+            #sendmessage button {
+                background: #fff url("http://www.iconskid.com/images/6/send-icon-plane-sendplanepaperpaper-6773.png");
+                background-size: contain;
+                width: 30px;
+                height: 30px;
+                position: absolute;
+                right: 20px;
+                top: 15px;
+                border: none;
+            }
+
+                #sendmessage button:hover {
+                    cursor: pointer;
+                    background-position: 0 0;
+                }
+
+                #sendmessage button:focus {
+                    outline: 0;
+                }
+
+        #close {
+            position: absolute;
+            top: 8px;
+            opacity: 0.8;
+            right: 10px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        #minimize {
+            position: absolute;
+            top: 10px;
+            opacity: 0.8;
+            right: 30px;
+            width: 15px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+            #minimize:hover {
+                opacity: 1;
+            }
+
+        .m1 {
+            background: #fff;
+            position: absolute;
+            width: 15px;
+            top: 13px;
+            right: 10px;
+            height: 3px;
+            -webkit-transition: all 250ms ease-in-out;
+            -moz-transition: all 250ms ease-in-out;
+            -ms-transition: all 250ms ease-in-out;
+            -o-transition: all 250ms ease-in-out;
+            transition: all 250ms ease-in-out;
+        }
+
+        #close:hover {
+            opacity: 1;
+        }
+
+        .cx, .cy {
+            background: #fff;
+            position: absolute;
+            width: 0px;
+            top: 15px;
+            right: 15px;
+            height: 3px;
+            -webkit-transition: all 250ms ease-in-out;
+            -moz-transition: all 250ms ease-in-out;
+            -ms-transition: all 250ms ease-in-out;
+            -o-transition: all 250ms ease-in-out;
+            transition: all 250ms ease-in-out;
+        }
+
+            .cx.s1, .cy.s1 {
+                right: 0;
+                width: 20px;
+                -webkit-transition: all 100ms ease-out;
+                -moz-transition: all 100ms ease-out;
+                -ms-transition: all 100ms ease-out;
+                -o-transition: all 100ms ease-out;
+                transition: all 100ms ease-out;
+            }
+
+            .cy.s2 {
+                -ms-transform: rotate(50deg);
+                -webkit-transform: rotate(50deg);
+                transform: rotate(50deg);
+                -webkit-transition: all 100ms ease-out;
+                -moz-transition: all 100ms ease-out;
+                -ms-transition: all 100ms ease-out;
+                -o-transition: all 100ms ease-out;
+                transition: all 100ms ease-out;
+            }
+
+            .cy.s3 {
+                -ms-transform: rotate(45deg);
+                -webkit-transform: rotate(45deg);
+                transform: rotate(45deg);
+                -webkit-transition: all 200ms ease-out;
+                -moz-transition: all 200ms ease-out;
+                -ms-transition: all 200ms ease-out;
+                -o-transition: all 200ms ease-out;
+                transition: all 200ms ease-out;
+            }
+
+            .cx.s1 {
+                right: 0;
+                width: 20px;
+                -webkit-transition: all 100ms ease-out;
+                -moz-transition: all 100ms ease-out;
+                -ms-transition: all 100ms ease-out;
+                -o-transition: all 100ms ease-out;
+                transition: all 100ms ease-out;
+            }
+
+            .cx.s2 {
+                -ms-transform: rotate(140deg);
+                -webkit-transform: rotate(140deg);
+                transform: rotate(140deg);
+                -webkit-transition: all 100ms ease-out;
+                -moz-transition: all 100ms ease-out;
+                -ms-transition: all 100ease-out;
+                -o-transition: all 100ms ease-out;
+                transition: all 100ms ease-out;
+            }
+
+            .cx.s3 {
+                -ms-transform: rotate(135deg);
+                -webkit-transform: rotate(135deg);
+                transform: rotate(135deg);
+                -webkit-transition: all 200 ease-out;
+                -moz-transition: all 200ms ease-out;
+                -ms-transition: all 200ms ease-out;
+                -o-transition: all 200ms ease-out;
+                transition: all 200ms ease-out;
+            }
+
+        #chatview, #sendmessage {
+            overflow: hidden;
+            border-radius: 6px;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.7/angular-animate.js"></script>
+    <script src="https://cdn.socket.io/socket.io-1.2.0.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!Notification) {
+                alert('Desktop notifications not available in your browser. Try Chromium.');
+                return;
+            }
+
+            if (Notification.permission !== "granted")
+                Notification.requestPermission();
+        });
+
+        angular.module("Chat", ['ngAnimate'])
+            .factory('socketFactory', socketFactory)
+            .directive('ngChat', ngchat)
+            .controller("Popup", Popup);
+
+        socketFactory.$inject = ['$rootScope', '$window'];
+        function socketFactory($rootScope, $window) {
+            var socket;
+            var services = {
+                on: on,
+                emit: emit,
+                init: init
+            };
+            return services;
+            function init(server) {
+                $window.socket = io.connect(server);
+            }
+            function on(eventName, callback) {
+                $window.socket.on(eventName, function () {
+                    var args = arguments;
+                    $rootScope.$apply(function () {
+                        callback.apply($window.socket, args);
+                    });
+                });
+            }
+            function emit(eventName, data, callback) {
+                $window.socket.emit(eventName, data, function () {
+                    var args = arguments;
+                    $rootScope.$apply(function () {
+                        if (callback) {
+                            callback.apply($window.socket, args);
+                        }
+                    });
+                });
+            }
+        }
+
+        ngchat.$inject = ['$compile', '$interval'];
+        function ngchat($compile, $interval) {
+            return {
+                restrict: 'E',
+                scope: {
+                    messages: "="
+                },
+                template: '<img id="User" src="https://octodex.github.com/images/codercat.jpg" />' +
+              '<div id="chatview" class="p1">  ' +
+               '<div id="profile">' +
+                   '<div id="close">' +
+                       '<div class="cy"></div>' +
+                       '<div class="cx"></div>' +
+                   '</div>' +
+                    '<div id="minimize">' +
+                       '<div class="m1"></div>' +
+                   '</div>' +
+                   '<p>Popeye</p>' +
+                   '<span>popeye@the.sailorman</span>' +
+               '</div>' +
+               '<div id="chat-messages">' +
+                 '<div ng-repeat="message in Chat.messages" class="message " ng-class=" {\'right\':message.From==\'him\' }">' +
+                      '<label ng-bind="Chat.formatDate(message.Date)"></label>' +
+                      '<img ng-if="message.From==\'him\'"  src="https://octodex.github.com/images/ironcat.jpg" />' +
+                      '<img ng-if="message.From==\'me\'"  src="https://octodex.github.com/images/codercat.jpg" />' +
+                      '<div class="bubble">{{message.msg}}' +
+                          '<span>{{message.Time}}</span>' +
+                       '</div>' +
+                '</div>    ' +
+               '</div>' +
+               '<div id="sendmessage">' +
+                   '<textarea row="1" type="text" ng-model="Chat.my_message" placeholder="Send message..." ></textarea>' +
+                   '<button ng-click="Chat.Send_message(Chat.my_message)" id="send"></button>' +
+               '</div>',
+                controllerAs: "Chat",
+                bindToController: true,
+                controller: function ($filter, $rootScope) {
+                    var Chat = this;
+                    Chat.Send_message = function (mesg) {
+                        if (mesg) {
+                            Chat.my_message = null;
+                            Chat.messages.push({ msg: mesg, Time: $filter('date')(new Date(), 'hh.mm a'), From: "me", Date: new Date() });
+                            $rootScope.$broadcast('newmessage');
+                        }
+                    }
+                    Chat.formatDate = function (date) {
+                        Chat.today = new Date();
+                        var diff = $filter('date')(Chat.today - date, 'dd');
+                        if (diff == 1) {
+                            Chat.PrevDate = "Today"
+                        }
+                        else if (diff == 2) {
+                            Chat.PrevDate = "Yesterday"
+                        }
+                        else if (diff > 2 && diff < 5) {
+                            Chat.PrevDate = $filter('date')(date, 'EEEE');
+                        }
+                        else {
+                            Chat.PrevDate = $filter('date')(date, 'fullDate');
+                        }
+                        if (Chat.retDate != Chat.PrevDate) {
+                            Chat.retDate = Chat.PrevDate;
+                            return Chat.PrevDate;
+                        }
+                        else {
+                            return null;
+                        }
+                    };
+                },
+                link: function ($scope, elem, attrs, controller) {
+                    elem.addClass('fab');
+                    var overlay = angular.element('<div id="overlay"></div>'),
+                     user_image = angular.element(elem.children()[0]),
+                     chat_view = angular.element(elem.children()[1]);
+                    $compile(chat_view)($scope);
+                    $compile(overlay)($scope);
+                    var profile = angular.element(chat_view[0].children[0]),
+                    chat_messages = angular.element(chat_view[0].children[1]),
+                    sendmessage = angular.element(chat_view[0].children[2]),
+                    close = angular.element(profile.children()[0]);
+                    minimize = angular.element(profile.children()[1]);
+                    angular.element(document.body).append(overlay)
+                    function hide() {
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+
+                        chat_view.removeClass('show');
+                        profile.removeClass("profile_small")
+
+                        chat_view.css({ display: 'none' });
+
+                        close.children()[0].classList.add("s1", "s2", "s3");
+                        close.children()[1].classList.add("s1", "s2", "s3");
+
+                        user_image.css({ width: '100%', top: '0px', left: '0px' });
+
+                        chat_messages.removeClass("animate");
+
+                        profile.removeClass("animate");
+                        profile.find("p").removeClass("animate");
+                        elem.removeClass('active');
+                        overlay.removeClass('dark-overlay');
+                    }
+                    function scroll_messages() {
+                        var objDiv = document.getElementById("chat-messages");
+                        objDiv.scrollTop = objDiv.scrollHeight - objDiv.clientHeight + 80;
+                    }
+
+                    $scope.$on('newmessage', function (event) {
+                        scroll_messages();
+                    });
+
+                    minimize.on('click', function () {
+                        if (!elem.hasClass('small')) {
+                            elem.addClass('small');
+                            sendmessage.css({
+                                display: 'none'
+                            });
+                        }
+                        else {
+                            elem.removeClass('small');
+                            sendmessage.css({
+                                display: 'block'
+                            });
+                        }
+                    })
+                    elem.on('click', function () {
+                        if (!elem.hasClass('active')) {
+                            elem.removeClass('small');
+                            var objDiv = document.getElementById("chat-messages");
+                            if (event) event.preventDefault();
+                            elem.addClass('active');
+                            user_image.css({
+                                width: '68px',
+                                top: '20px',
+                                left: '108px'
+                            });
+                            setTimeout(function () {
+                                profile.addClass("animate");
+                                profile.find("p").addClass("animate");
+                                chat_messages.addClass("animate");
+                            }, 200);
+                            setTimeout(function () {
+                                chat_view.addClass('show');
+                                scroll_messages();
+                                close.children()[0].classList.add('s1');
+                                close.children()[1].classList.add('s1');
+                                setTimeout(function () {
+                                    close.children()[0].classList.add('s2');
+                                    close.children()[1].classList.add('s2');
+                                }, 250);
+                                setTimeout(function () {
+                                    close.children()[0].classList.add('s3');
+                                    close.children()[1].classList.add('s3');
+                                }, 300);
+                                var lastScrollTop = 0;
+                                document.getElementById("chat-messages").onscroll = function (e) {
+                                    var st = objDiv.scrollTop;
+                                    if (st - lastScrollTop > 10) {
+                                        profile.addClass("profile_small")
+                                    } else if (st - lastScrollTop < -10) {
+                                        profile.removeClass("profile_small")
+                                    }
+                                    lastScrollTop = st;
+                                }
+                            }, 150);
+                            overlay.addClass('dark-overlay');
+                        }
+                    })
+                    overlay.on('click', function () {
+                        if (event) {
+                            hide();
+                        }
+                    })
+                    close.on('click', function () {
+                        if (event) {
+                            hide();
+                        }
+                    })
+                }
+            };
+
+
+        }
+
+        Popup.$inject = ['$scope', 'socketFactory'];
+        function Popup($scope, socketFactory) {
+
+            //Uncomment on Local Machine
+            //socketFactory.init('http://localhost:3000/');
+            //socketFactory.emit('connectionInitiation');
+
+
+            $scope.messages = [{ msg: "Hai", Time: "12.30 PM", From: "me", Date: new Date("2017-01-27") },
+                    { msg: "Hai", Time: "12.44 PM", From: "him", Date: new Date("2017-01-31") },
+                    { msg: "How are you?", Time: "1.01 PM", From: "me", Date: new Date("2017-02-01") },
+                    { msg: "Pretty good", Time: "1.04 PM", From: "him", Date: new Date("2017-02-01") },
+                    { msg: "How about you?", Time: "1.11 PM", From: "him", Date: new Date("2017-02-02") },
+                    { msg: "Ya Fine", Time: "1.14 PM", From: "me", Date: new Date("2017-02-02") },
+                    { msg: "How is your work going?", Time: "1.15 PM", From: "me", Date: new Date("2017-02-03") },
+                    { msg: "Good.", Time: "1.19 PM", From: "him", Date: new Date("2017-02-03") }]
+
+            //Uncomment on Local Machine
+            //$scope.send = function (msg) {
+            //    $scope.msg = "";
+            //    socketFactory.emit('messageFromClient', { To: $scope.CurrentUser.Name, Message: msg });
+            //}
+            //socketFactory.on('clientToClientMessage', function (userObj) {
+            //    $scope.Messages.push(userObj);
+            //});
+
+            function notifyMe(val) {
+                if (Notification.permission !== "granted")
+                    Notification.requestPermission();
+                else {
+                    var notification = new Notification('Notification title', {
+                        icon: 'http://cdn.sstatic.net/stackexchange/img/logos/so/so-icon.png',
+                        body: "Hey you have a new message from " + val,
+                    });
+
+                    notification.onclick = function () {
+                        window.open("http://stackoverflow.com/a/13328397/1269037");
+                    };
+
+                }
+
+            }
+
+        }
+    </script>
+
+</head>
+<body ng-app="Chat" ng-controller="Popup" ng-cloak>
+    <ng-chat messages="messages">   </ng-chat>
+</body>
+</html>
